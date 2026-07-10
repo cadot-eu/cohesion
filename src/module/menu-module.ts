@@ -124,6 +124,11 @@ export default class MenuModule extends Module {
         label: "Help",
         submenu: [
           {
+            label: "Test Desktop Notification",
+            click: () => this.notifications.fireTest()
+          },
+          { type: "separator" },
+          {
             label: "What's New",
             click: () => this.whatsnew.show()
           },

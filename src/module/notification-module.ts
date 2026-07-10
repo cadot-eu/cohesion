@@ -28,6 +28,10 @@ export default class NotificationModule extends Module {
     settings.set("enabled", val);
   }
 
+  public fireTest() {
+    this.fireNotification(3);
+  }
+
   public override onLoad() {
     this.cohesion.onTitleUpdateCallbacks.push((title, explicitSet) => {
       if (!explicitSet || !this._enabled) return;
