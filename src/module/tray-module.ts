@@ -13,96 +13,96 @@ const settings = new Settings("tray");
 
 export default class TrayModule extends Module {
 
-    private readonly tray: Tray;
+  private readonly tray: Tray;
 
-    constructor(
-        private readonly cohesion: Cohesion,
-        private readonly window: BrowserWindow
-    ) {
-        super();
-        this.tray = new Tray(settings.get("greyscale", false) ? ICON_GREYSCALE : ICON);
-    }
+  constructor(
+    private readonly cohesion: Cohesion,
+    private readonly window: BrowserWindow
+  ) {
+    super();
+    this.tray = new Tray(settings.get("greyscale", false) ? ICON_GREYSCALE : ICON);
+  }
 
-    public override onLoad() {
-        this.updateMenu();
-        this.registerListeners();
-    }
+  public override onLoad() {
+    this.updateMenu();
+    this.registerListeners();
+  }
 
-    private updateMenu(unread = getUnreadMessages(this.window.title)) {
-        const menu = Menu.buildFromTemplate([
-            {
-                label: this.window.isVisible() ? "Minimize to tray" : "Show Cohesion",
-                click: () => this.onClickFirstItem(unread)
-            },
-            {
-                label: settings.get("greyscale", false) ? "Use color icon" : "Use greyscale icon",
-                click: () => {
-                    settings.set("greyscale", !settings.get("greyscale", false));
+  private updateMenu(unread = getUnreadMessages(this.window.title)) {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: this.window.isVisible() ? "Minimize to tray" : "Show Cohesion",
+        click: () => this.onClickFirstItem(unread)
+      },
+      {
+        label: settings.get("greyscale", false) ? "Use color icon" : "Use greyscale icon",
+        click: () => {
+          settings.set("greyscale", !settings.get("greyscale", false));
 
-                    this.tray.setImage(unread == 0 ?
-                        (settings.get("greyscale", false) ? ICON_GREYSCALE : ICON) :
-                        (settings.get("greyscale", false) ? ICON_GREYSCALE_UNREAD : ICON_UNREAD));
-                    
-                    this.updateMenu(unread);
-                }
-            },
-            {
-                label: "Quit Cohesion",
-                click: () => this.cohesion.quit()
-            },
-        ]);
+          this.tray.setImage(unread == 0 ?
+            (settings.get("greyscale", false) ? ICON_GREYSCALE : ICON) :
+            (settings.get("greyscale", false) ? ICON_GREYSCALE_UNREAD : ICON_UNREAD));
 
-        let tooltip = "Cohesion";
-
-        if (unread !== 0) {
-            menu.insert(0, new MenuItem({
-                label: (unread === Infinity ? "9+" : unread) + " unread notifications",
-                enabled: false
-            }));
-
-            menu.insert(1, new MenuItem({ type: "separator" }));
-
-            tooltip = tooltip + " - " + unread + " unread notifications";
+          this.updateMenu(unread);
         }
+      },
+      {
+        label: "Quit Cohesion",
+        click: () => this.cohesion.quit()
+      },
+    ]);
 
-        this.tray.setContextMenu(menu);
-        this.tray.setToolTip(tooltip);
+    let tooltip = "Cohesion";
+
+    if (unread !== 0) {
+      menu.insert(0, new MenuItem({
+        label: (unread === Infinity ? "9+" : unread) + " unread notifications",
+        enabled: false
+      }));
+
+      menu.insert(1, new MenuItem({ type: "separator" }));
+
+      tooltip = tooltip + " - " + unread + " unread notifications";
     }
 
-    private onClickFirstItem(unread = getUnreadMessages(this.window.title)) {
-        if (this.window.isVisible()) {
-            this.window.hide();
-        } else {
-            this.window.show();
-            this.window.focus();
-        }
+    this.tray.setContextMenu(menu);
+    this.tray.setToolTip(tooltip);
+  }
 
-        this.updateMenu(unread);
+  private onClickFirstItem(unread = getUnreadMessages(this.window.title)) {
+    if (this.window.isVisible()) {
+      this.window.hide();
+    } else {
+      this.window.show();
+      this.window.focus();
     }
 
-    private registerListeners() {
-        this.window.on("show", () => this.updateMenu());
-        this.window.on("hide", () => this.updateMenu());
+    this.updateMenu(unread);
+  }
 
-        this.window.on("close", event => {
-            if (this.cohesion.quitting) return;
+  private registerListeners() {
+    this.window.on("show", () => this.updateMenu());
+    this.window.on("hide", () => this.updateMenu());
 
-            event.preventDefault();
-            this.window.hide();
-        });
+    this.window.on("close", event => {
+      if (this.cohesion.quitting) return;
 
-        this.cohesion.onTitleUpdate = (title, explicitSet) => {
-            if (!explicitSet) return;
+      event.preventDefault();
+      this.window.hide();
+    });
 
-            const unread = getUnreadMessages(title);
+    this.cohesion.onTitleUpdateCallbacks.push((title, explicitSet) => {
+      if (!explicitSet) return;
 
-            this.updateMenu(unread);
-            this.tray.setImage(unread == 0 ?
-                (settings.get("greyscale", false) ? ICON_GREYSCALE : ICON) :
-                (settings.get("greyscale", false) ? ICON_GREYSCALE_UNREAD : ICON_UNREAD));
-        };
+      const unread = getUnreadMessages(title);
 
-        this.tray.on("click", () => this.onClickFirstItem());
-        this.tray.on("double-click", () => this.onClickFirstItem());
-    }
+      this.updateMenu(unread);
+      this.tray.setImage(unread == 0 ?
+        (settings.get("greyscale", false) ? ICON_GREYSCALE : ICON) :
+        (settings.get("greyscale", false) ? ICON_GREYSCALE_UNREAD : ICON_UNREAD));
+    });
+
+    this.tray.on("click", () => this.onClickFirstItem());
+    this.tray.on("double-click", () => this.onClickFirstItem());
+  }
 };
