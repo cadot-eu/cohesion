@@ -20,6 +20,7 @@ export default class Cohesion {
   private readonly window: BrowserWindow;
   private readonly moduleManager: ModuleManager;
   private readonly tabsView: WebContentsView;
+  private readonly notificationModule: NotificationModule;
   private readonly tabs: Array<WebContentsView>;
   private currentTab: WebContentsView | null = null;
   private activeTab: number = 0;
@@ -203,6 +204,7 @@ export default class Cohesion {
     const spellcheckModule = new SpellCheckModule();
     const whatsnewModule = new WhatsNewModule(this.window);
     const notificationModule = new NotificationModule(this, this.window);
+    this.notificationModule = notificationModule;
     this.moduleManager = new ModuleManager([
       new Electron21Fix(),
       new HotkeyModule(this, this.window),
@@ -280,6 +282,10 @@ export default class Cohesion {
 
     ipcMain.on('close-tab', (event, index) => {
       this.closeTab(index);
+    });
+
+    ipcMain.on('notion-content-changed', (_event, newText: string) => {
+      this.notificationModule.fireContentChanged(newText);
     });
   }
 };

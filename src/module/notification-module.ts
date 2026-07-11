@@ -32,12 +32,30 @@ export default class NotificationModule extends Module {
     this.fireNotification(3);
   }
 
+  public fireContentChanged(text: string) {
+    if (!this._enabled) return;
+
+    const notification = new Notification({
+      title: "Cohesion",
+      body: text,
+      icon: this.getIconPath(),
+      urgency: "normal",
+    });
+
+    notification.on("click", () => {
+      this.window.show();
+      this.window.focus();
+    });
+
+    notification.show();
+  }
+
   public override onLoad() {
     this.cohesion.onTitleUpdateCallbacks.push((title, explicitSet) => {
       if (!explicitSet || !this._enabled) return;
 
       const count = getUnreadMessages(title);
-      if (count > this.lastCount && count > 0 && !this.window.isFocused()) {
+      if (count > this.lastCount && count > 0) {
         this.fireNotification(count);
       }
       this.lastCount = count;
